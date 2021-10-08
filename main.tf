@@ -1,12 +1,12 @@
+
 resource "google_storage_bucket" "bucket" {
   name = "${var.service_name}-${var.function_name}-cloud-function-bucket"
 }
 
 resource "google_storage_bucket_object" "archive" {
-  name   = "${var.service_name}-${var.function_name}.zip"
+  name   = "${var.service_name}-${var.function_name}-${filemd5(var.source_zip_file)}.zip"
   bucket = google_storage_bucket.bucket.name
   source = "${var.source_zip_file}"
-  depends_on = [null_resource.gradleBuild]
 }
 
 resource "google_cloudfunctions_function" "functionEvent" {
@@ -22,14 +22,5 @@ resource "google_cloudfunctions_function" "functionEvent" {
   event_trigger {
     event_type = "${var.event_trigger_type}"
     resource   = "${var.event_trigger_resource}"
-  }
-}
-
-resource "null_resource" "gradleBuild" {
-  provisioner "local-exec" {
-    command = "gradle build"
-  }
-  triggers = {
-    always_run = "${timestamp()}"
   }
 }
